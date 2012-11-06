@@ -75,6 +75,11 @@
 #include "util-unittest-helper.h"
 #include "util-profiling.h"
 
+/* File match constrants */
+#define DET_FILE_MATCH            1
+#define DET_FILE_CANT_MATCH       2
+#define DET_FILESTORE_CANT_MATCH  3
+
 /** convert enum to string */
 #define CASE_CODE(E)  case E: return #E
 

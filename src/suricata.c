@@ -136,6 +136,8 @@
 
 #include "util-coredump-config.h"
 
+#include "mime-decode.h"
+
 #include "defrag.h"
 
 #include "runmodes.h"
@@ -1973,7 +1975,6 @@ static int PostConfLoadedSetup(SCInstance *suri)
 
     SCReturnInt(TM_ECODE_OK);
 }
-
 
 int main(int argc, char **argv)
 {
