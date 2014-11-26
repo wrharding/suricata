@@ -266,41 +266,24 @@ static int CreatePacketData(ThreadVars *tv, const Packet *p, json_t * js)
     /* IPv4/v6 */
     if (PKT_IS_IPV4(p)) {
 
-        json_t *ipv4 = json_object();
-
-        if (ipv4 == NULL)
-            return 0;
-
         PrintInet(AF_INET, (const void *)GET_IPV4_SRC_ADDR_PTR(p), srcip, sizeof(srcip));
         PrintInet(AF_INET, (const void *)GET_IPV4_DST_ADDR_PTR(p), dstip, sizeof(dstip));
 
-        json_object_set_new(ipv4, "dst", json_string(dstip));
-        json_object_set_new(ipv4, "src", json_string(srcip));
+        json_object_set_new(js, "destination_ip", json_string(dstip));
+        json_object_set_new(js, "source_ip", json_string(srcip));
 
-        json_object_set_new(ipv4, "tos", json_integer(IPV4_GET_IPTOS(p)));
-        json_object_set_new(ipv4, "ttl", json_integer(IPV4_GET_IPTTL(p)));
-        json_object_set_new(ipv4, "id", json_integer(IPV4_GET_IPID(p)));
+        json_object_set_new(js, "ip_tos", json_integer(IPV4_GET_IPTOS(p)));
+        json_object_set_new(js, "ip_ttl", json_integer(IPV4_GET_IPTTL(p)));
+        json_object_set_new(js, "ip_id", json_integer(IPV4_GET_IPID(p)));
 
-        json_object_set_new(ipv4, "header_len", json_integer(IPV4_GET_HLEN(p)));
-        json_object_set_new(ipv4, "datagram_len", json_integer(ntohs(IPV4_GET_IPLEN(p))));
-
-        json_object_set_new(js, "ipv4", ipv4);
 
     } else if (PKT_IS_IPV6(p)) {
-
-      json_t *ipv6 = json_object();
-
-      if (ipv6 == NULL)
-        return 0;
-
 
       PrintInet(AF_INET6, (const void *)GET_IPV6_SRC_ADDR(p), srcip, sizeof(srcip));
       PrintInet(AF_INET6, (const void *)GET_IPV6_DST_ADDR(p), dstip, sizeof(dstip));
 
-      json_object_set_new(ipv6, "dst", json_string(dstip));
-      json_object_set_new(ipv6, "src", json_string(srcip));
-
-      json_object_set_new(js, "ipv6", ipv6);
+      json_object_set_new(js, "destination_ip", json_string(dstip));
+      json_object_set_new(js, "source_ip", json_string(srcip));
 
     }
 
@@ -316,105 +299,71 @@ static int CreatePacketData(ThreadVars *tv, const Packet *p, json_t * js)
     /* Ethernet */
     if (p->ethh != NULL) {
 
-      json_t *eth = json_object();
-
-      if (eth == NULL)
-        return 0;
-
       snprintf(construct_buf, BUF_LEN, "%02X:%02X:%02X:%02X:%02X:%02X", p->ethh->eth_src[0],
               p->ethh->eth_src[1], p->ethh->eth_src[2], p->ethh->eth_src[3],
               p->ethh->eth_src[4], p->ethh->eth_src[5]);
-      json_object_set_new(eth, "src", json_string((char *) construct_buf));
+      json_object_set_new(js, "eth_src", json_string((char *) construct_buf));
 
       snprintf(construct_buf, BUF_LEN, "%02X:%02X:%02X:%02X:%02X:%02X", p->ethh->eth_dst[0],
               p->ethh->eth_dst[1], p->ethh->eth_dst[2], p->ethh->eth_dst[3],
               p->ethh->eth_dst[4], p->ethh->eth_dst[5]);
-      json_object_set_new(eth, "dst", json_string((char *) construct_buf));
+      json_object_set_new(js, "eth_dst", json_string((char *) construct_buf));
 
       snprintf(construct_buf, BUF_LEN, "0x%X", ntohs(p->ethh->eth_type)); 
-      json_object_set_new(eth, "type", json_string((char *)construct_buf));
+      json_object_set_new(js, "eth_type", json_string((char *)construct_buf));
 
       snprintf(construct_buf, BUF_LEN,"0x%X", p->pktlen);
-      json_object_set_new(eth, "len", json_string((char *)construct_buf));
-
-      json_object_set_new(js, "eth", eth);
+      json_object_set_new(js, "eth_len", json_string((char *)construct_buf));
     }
 
 
     /* TCP */
     if (PKT_IS_TCP(p)) {
 
-      json_t *tcp = json_object();
-
-      if (tcp == NULL)
-        return 0;
-
       snprintf(construct_buf, BUF_LEN,"0x%X", p->tcph->th_seq);
-      json_object_set_new(tcp, "seq", json_string((char *)construct_buf));
+      json_object_set_new(js, "tcp_seq", json_string((char *)construct_buf));
 
       snprintf(construct_buf, BUF_LEN, "0x%X", p->tcph->th_ack);
-      json_object_set_new(tcp, "ack", json_string((char *)construct_buf));
+      json_object_set_new(js, "tcp_ack", json_string((char *)construct_buf));
 
       snprintf(construct_buf, BUF_LEN, "0x%lX", (u_long)ntohl(p->tcph->th_win));
-      json_object_set_new(tcp, "win", json_string((char *)construct_buf));
+      json_object_set_new(js, "tcp_win", json_string((char *)construct_buf));
 
-      json_object_set_new(tcp, "len", json_integer(TCP_GET_RAW_OFFSET(p->tcph) << 2));
+      json_object_set_new(js, "tcp_len", json_integer(TCP_GET_RAW_OFFSET(p->tcph) << 2));
 
-      json_object_set_new(tcp, "src_port", json_integer(p->sp));
-      json_object_set_new(tcp, "dst_port", json_integer(p->dp));
+      json_object_set_new(js, "source_port", json_integer(p->sp));
+      json_object_set_new(js, "destination_port", json_integer(p->dp));
 
       char tcpflags[9];
       CreateTCPFlagString(p, tcpflags);
-      json_object_set_new(tcp, "flags", json_string((char *)tcpflags));
-
-      json_object_set_new(js, "tcp", tcp);
+      json_object_set_new(js, "tcp_flags", json_string((char *)tcpflags));
     }
 
     /* UDP */
     else if (PKT_IS_UDP(p)) {
-
-      json_t *udp = json_object();
-
-      if (udp == NULL)
-        return 0;
-
-      json_object_set_new(udp, "len", json_integer(UDP_GET_LEN(p)));
-      json_object_set_new(udp, "src_port", json_integer(p->sp));
-      json_object_set_new(udp, "dst_port", json_integer(p->dp));
-
-      json_object_set_new(js, "udp", udp);
+      json_object_set_new(js, "udp_len", json_integer(UDP_GET_LEN(p)));
+      json_object_set_new(js, "source_port", json_integer(p->sp));
+      json_object_set_new(js, "destination_port", json_integer(p->dp));
     }
 
     /* ICMPv4/v6 */
     else if (p->proto == IPPROTO_ICMP) {
     
       if (PKT_IS_ICMPV4(p)) {
-              
-        json_t *icmpv4 = json_object();
-
-        if (icmpv4 == NULL)
-          return 0;
-
-        json_object_set_new(icmpv4, "id", json_integer(ICMPV4_GET_ID(p)));
-        json_object_set_new(icmpv4, "seq", json_integer(ICMPV4_GET_SEQ(p)));
-        json_object_set_new(icmpv4, "type",json_integer(ICMPV4_GET_TYPE(p)));
-        json_object_set_new(icmpv4, "code",json_integer(ICMPV4_GET_CODE(p)));
-
-        json_object_set_new(js, "icmpv4", icmpv4);
+        
+        json_object_set_new(js, "icmp_version", json_integer(4));      
+        json_object_set_new(js, "icmp_id", json_integer(ICMPV4_GET_ID(p)));
+        json_object_set_new(js, "icmp_seq", json_integer(ICMPV4_GET_SEQ(p)));
+        json_object_set_new(js, "icmp_type",json_integer(ICMPV4_GET_TYPE(p)));
+        json_object_set_new(js, "icmp_code",json_integer(ICMPV4_GET_CODE(p)));
 
       } else if(PKT_IS_ICMPV6(p)) {
 
-        json_t *icmpv6 = json_object();
-
-        if (icmpv6 == NULL)
-          return 0;
-
-        json_object_set_new(icmpv6, "id", json_integer(ICMPV6_GET_ID(p)));
-        json_object_set_new(icmpv6, "seq", json_integer(ICMPV6_GET_SEQ(p)));
-        json_object_set_new(icmpv6, "type",json_integer(ICMPV6_GET_TYPE(p)));
-        json_object_set_new(icmpv6, "code",json_integer(ICMPV6_GET_CODE(p)));
-
-        json_object_set_new(js, "icmpv6", icmpv6);
+        json_object_set_new(js, "icmp_version", json_integer(6));
+        json_object_set_new(js, "icmp_id", json_integer(ICMPV6_GET_ID(p)));
+        json_object_set_new(js, "icmp_seq", json_integer(ICMPV6_GET_SEQ(p)));
+        json_object_set_new(js, "icmp_type",json_integer(ICMPV6_GET_TYPE(p)));
+        json_object_set_new(js, "icmp_code",json_integer(ICMPV6_GET_CODE(p)));
       }
 
     }
@@ -442,6 +391,7 @@ static int AlertHPFeedsLogger(ThreadVars *tv, void *thread_data, const Packet *p
     SCMutexLock(mtx);
 
     json_t *record = json_object();
+    json_object_set_new(record, "sensor", json_string(ctx->hpfeeds_ident));
 
     if (!CreatePacketData(tv, p, record))
     {
@@ -467,21 +417,15 @@ static int AlertHPFeedsLogger(ThreadVars *tv, void *thread_data, const Packet *p
             action = "blocked";
         }
 
-        json_t *ajs = json_object();
+        json_object_set_new(record, "action", json_string(action));
 
-        if (ajs == NULL) {
-            json_decref(record);
-            SCMutexUnlock(mtx);
-            return TM_ECODE_OK;
-        }
+        // header
+        // priority
+        // classification
 
-        json_object_set_new(ajs, "action", json_string(action));
-        json_object_set_new(ajs, "id", json_integer(pa->s->id));
-        json_object_set_new(ajs, "rev", json_integer(pa->s->rev));
-        json_object_set_new(ajs, "msg",json_string((pa->s->msg) ? pa->s->msg : ""));
-
-        /* alert */
-        json_object_set_new(record, "alert", ajs);
+        json_object_set_new(record, "signature_id",  json_integer(pa->s->id));
+        json_object_set_new(record, "signature_rev", json_integer(pa->s->rev));
+        json_object_set_new(record, "signature",     json_string((pa->s->msg) ? pa->s->msg : ""));
     }
 
     HPFeedsPublish(record, ctx);
