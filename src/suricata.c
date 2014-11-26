@@ -73,6 +73,7 @@
 #include "conf-yaml-loader.h"
 
 #include "alert-fastlog.h"
+#include "alert-hpfeeds.h"
 #include "alert-unified2-alert.h"
 #include "alert-debuglog.h"
 #include "alert-prelude.h"
@@ -855,6 +856,8 @@ void RegisterAllModules()
     TmModuleLuaLogRegister();
     /* fast log */
     TmModuleAlertFastLogRegister();
+    /* hpfeeds log */
+    TmModuleAlertHPFeeds();
     /* debug log */
     TmModuleAlertDebugLogRegister();
     /* prelue log */

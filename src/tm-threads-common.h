@@ -100,6 +100,9 @@ typedef enum {
     TMM_FLOWRECYCLER,
 
     TMM_LUALOG,
+
+    TMM_ALERTHPFEEDS,
+
     TMM_SIZE,
 } TmmId;
 

@@ -82,6 +82,15 @@ outputs:
       append: yes
       #filetype: regular # 'regular', 'unix_stream' or 'unix_dgram'
 
+  # hpfeeds output
+  - alert-hpfeeds:
+      enabled: yes
+      host: 104.131.177.234 
+      ident: suricata
+      secret: s3cr3t
+      channel: suricata.events
+      reconnect: yes # do we reconnect if publish fails ?!          
+
   # Extensible Event Format (nicknamed EVE) event log in JSON format
   - eve-log:
       enabled: yes
@@ -318,8 +327,8 @@ outputs:
       #   - script1.lua
 
 # Magic file. The extension .mgc is added to the value here.
-#magic-file: /usr/share/file/magic
-magic-file: @e_magic_file@
+magic-file: /usr/share/file/misc/magic
+#magic-file: @e_magic_file@
 
 # When running in NFQ inline mode, it is possible to use a simulated
 # non-terminal NFQUEUE verdict.
